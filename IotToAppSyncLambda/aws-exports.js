@@ -10,5 +10,5 @@ const appSyncConfig = {
 };
 
 
-// module.exports = appSyncConfig;
-export default appSyncConfig;
+module.exports = appSyncConfig;
+//export default appSyncConfig;

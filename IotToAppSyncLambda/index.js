@@ -1,30 +1,16 @@
-// const createAuthLink  = require ("aws-appsync-auth-link");
-// const createSubscriptionHandshakeLink  = require ("aws-appsync-subscription-link");
+const {createAuthLink}  = require ("aws-appsync-auth-link");
+const {createSubscriptionHandshakeLink}  = require ("aws-appsync-subscription-link");
 
-// const fetch  = require ('node-fetch')
-// const ApolloLink  = require ("apollo-link");
-// const createHttpLink = require ("apollo-link-http");
-// const apolloClient  = require ("@apollo/client/core");
-// const { ApolloClient } = apolloClient;
-// const InMemoryCache  = require ("apollo-cache-inmemory");
-// const apolloCore  = require ("@apollo/client/core");
-// const { gql } = apolloCore;
-
-// const appSyncConfig  = require ("./aws-exports.js");
-
-import { createAuthLink } from "aws-appsync-auth-link";
-import { createSubscriptionHandshakeLink } from "aws-appsync-subscription-link";
-
-import fetch from 'node-fetch'
-import { ApolloLink } from "apollo-link";
-import { createHttpLink } from "apollo-link-http";
-import apolloClient from "@apollo/client/core";
+const fetch  = require ('node-fetch')
+const {ApolloLink}  = require ("apollo-link");
+const {createHttpLink} = require ("apollo-link-http");
+const apolloClient  = require ("@apollo/client/core");
 const { ApolloClient } = apolloClient;
-import { InMemoryCache } from "apollo-cache-inmemory";
-import apolloCore from "@apollo/client/core";
+const {InMemoryCache}  = require ("apollo-cache-inmemory");
+const apolloCore  = require ("@apollo/client/core");
 const { gql } = apolloCore;
 
-import appSyncConfig from "./aws-exports.js";
+const appSyncConfig  = require ("./aws-exports.js");
 
 const url = appSyncConfig.aws_appsync_graphqlEndpoint;
 const region = appSyncConfig.aws_appsync_region;
@@ -57,20 +43,7 @@ query listLabPractices {
   }
   }
   `;
-// exports.handler = async (event) => {
-//   try {
-//     const Test = await client.query({
-//       query: LIST_LAB_PRACTICES
-//     })
-//     console.log(Test.data.listLabPractices.items)
-//   } catch (error) {
-//     console.log(error)
-//   }
-// }
-
-main();
-
-async function main() {
+exports.handler = async (event) => {
   try {
     const Test = await client.query({
       query: LIST_LAB_PRACTICES
@@ -80,4 +53,17 @@ async function main() {
     console.log(error)
   }
 }
+
+// main();
+
+// async function main() {
+//   try {
+//     const Test = await client.query({
+//       query: LIST_LAB_PRACTICES
+//     })
+//     console.log(Test.data.listLabPractices.items)
+//   } catch (error) {
+//     console.log(error)
+//   }
+// }
 
