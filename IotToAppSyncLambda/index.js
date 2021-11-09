@@ -1,16 +1,16 @@
-const {createAuthLink}  = require ("aws-appsync-auth-link");
-const {createSubscriptionHandshakeLink}  = require ("aws-appsync-subscription-link");
+const { createAuthLink } = require("aws-appsync-auth-link");
+const { createSubscriptionHandshakeLink } = require("aws-appsync-subscription-link");
 
-const fetch  = require ('node-fetch')
-const {ApolloLink}  = require ("apollo-link");
-const {createHttpLink} = require ("apollo-link-http");
-const apolloClient  = require ("@apollo/client/core");
+const fetch = require('node-fetch')
+const { ApolloLink } = require("apollo-link");
+const { createHttpLink } = require("apollo-link-http");
+const apolloClient = require("@apollo/client/core");
 const { ApolloClient } = apolloClient;
-const {InMemoryCache}  = require ("apollo-cache-inmemory");
-const apolloCore  = require ("@apollo/client/core");
+const { InMemoryCache } = require("@apollo/client/core");
+const apolloCore = require("@apollo/client/core");
 const { gql } = apolloCore;
 
-const appSyncConfig  = require ("./aws-exports.js");
+const appSyncConfig = require("./aws-exports.js");
 
 const url = appSyncConfig.aws_appsync_graphqlEndpoint;
 const region = appSyncConfig.aws_appsync_region;
@@ -43,20 +43,40 @@ query listLabPractices {
   }
   }
   `;
-exports.handler = async (event) => {
-  try {
-    const Test = await client.query({
-      query: LIST_LAB_PRACTICES
-    })
-    console.log(Test.data.listLabPractices.items)
-  } catch (error) {
-    console.log(error)
+
+const UPDATE_COMMAND = gql`
+mutation updateLabPracticeSessionCommand(
+  $id: ID!
+  $status: String!
+  ) {
+  updateLabPracticeSessionCommand(input: {id: $id status: $status}){
+    id,
+    status
   }
 }
+`;
 
-// main();
-
-// async function main() {
+// exports.handler = async (event) => {
+//   switch (event.type) {
+//     case "output":
+//       break;
+//     case "command":
+//       try {
+//         const ans = await client.mutate({
+//           mutation: UPDATE_COMMAND,
+//           variables: {
+//             Command: {
+//               id: event.uuid,
+//               status: "ok"
+//             }
+//           }
+//         })
+//         console.log(ans)
+//       } catch (error) {
+//         console.log(error)
+//       }
+//       break;
+//   }
 //   try {
 //     const Test = await client.query({
 //       query: LIST_LAB_PRACTICES
@@ -66,4 +86,40 @@ exports.handler = async (event) => {
 //     console.log(error)
 //   }
 // }
+
+main();
+
+async function main() {
+  let event = {
+    type: "command",
+    uuid: "49b9fd50-ad16-4738-9132-f96cac186cc3",
+    status: "fail"
+  }
+  switch (event.type) {
+    case "output":
+      break;
+    case "command":
+      try {
+        const ans = await client.mutate({
+          mutation: UPDATE_COMMAND,
+          variables: {
+            id: event.uuid,
+            status: event.status
+          }
+        })
+        console.log(ans)
+      } catch (error) {
+        console.log(error)
+      }
+      break;
+  }
+  try {
+    const Test = await client.query({
+      query: LIST_LAB_PRACTICES
+    })
+    console.log(Test.data.listLabPractices.items)
+  } catch (error) {
+    console.log(error)
+  }
+}
 
