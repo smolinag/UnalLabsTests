@@ -41,8 +41,8 @@ const QUERY_OUTPUT = gql`
 `;
 
 const UPDATE_OUTPUT = gql`
-  mutation updateLabPracticeSessionOutput($id: ID!, $value: String!, $version: Int!, $captureDate: AWSDateTime!, $storageDate: AWSDateTime!) {
-    updateLabPracticeSessionOutput(input: { id: $id, value: $value, _version: $version, captureDate: $captureDate, storageDate: $storageDate }) {
+  mutation updateLabPracticeSessionOutput($id: ID!, $value: String!, $version: Int!, $captureDate: AWSDateTime!) {
+    updateLabPracticeSessionOutput(input: { id: $id, value: $value, _version: $version, captureDate: $captureDate}) {
       id
       value
       _version
@@ -135,12 +135,15 @@ async function updateLabPracticeSessionOutput(uuid, value, captureDate) {
 }
 
 exports.handler = async (event) => {
+  console.log(event)
   switch (event.type) {
     case "output":
-      updateLabPracticeSessionOutput(event.uuid, event.value, event.captureDate);
+      console.log("Output: " + event.uuid)
+      await updateLabPracticeSessionOutput(event.uuid, event.value, event.captureDate);
       break;
     case "command":
-      updateLabPracticeSessionCommand(event.uuid, event.status, event.executionDate);
+      console.log("Command: " + event.uuid)
+      await updateLabPracticeSessionCommand(event.uuid, event.status, event.executionDate);
       break;
   }
 };
@@ -151,8 +154,8 @@ exports.handler = async (event) => {
 //   let event = {
 //     type: "output",
 //     uuid: "c78ac980-186d-4b89-9347-b77f3f771346",
-//     value: "Hey",
-//     captureDate: "2021-11-09T17:16:00-05:00",
+//     value: "Heyyoo",
+//     captureDate: "2021-11-09T17:45:00-05:00",
 //   };
 //   // let event = {
 //   //   type: "command",
