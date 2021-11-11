@@ -31,18 +31,22 @@ const client = new ApolloClient({
 });
 
 //---GQL Queries---
-const QUERY_OUTPUT = gql`
-  query getLabPracticeSessionOutput($id: ID!) {
-    getLabPracticeSessionOutput(id: $id) {
-      id
-      _version
+const LIST_OUTPUTS = gql`
+  query listLabPracticeOutputs($filter: ModelLabPracticeOutputFilterInput) {
+    listLabPracticeOutputs(filter: $filter) {
+      items {
+        id
+        name
+      }
     }
   }
 `;
 
-const UPDATE_OUTPUT = gql`
-  mutation updateLabPracticeSessionOutput($id: ID!, $value: String!, $version: Int!, $captureDate: AWSDateTime!) {
-    updateLabPracticeSessionOutput(input: { id: $id, value: $value, _version: $version, captureDate: $captureDate}) {
+const CREATE_SESSIONOUTPUT = gql`
+  mutation createLabPracticeSessionOutput($labpracticesessionID: ID!, $labpracticeoutputID: ID!, $value: String!, $captureDate: AWSDateTime!) {
+    createLabPracticeSessionOutput(
+      input: { labpracticesessionID: $labpracticesessionID, labpracticeoutputID: $labpracticeoutputID, value: $value, captureDate: $captureDate }
+    ) {
       id
       value
       _version
@@ -71,6 +75,25 @@ const UPDATE_COMMAND = gql`
   }
 `;
 //---------------
+
+async function listLabPracticeOutputs(filter) {
+  try {
+    //Query labPracticeOutput to get id
+    const queryAns = await client.query({
+      query: LIST_OUTPUTS,
+      variables: { filter },
+    });
+    let outputs = queryAns.data.listLabPracticeOutputs.items;
+    if (outputs.length > 0) {
+      console.log("Output id: " + outputs[0].id);
+      return outputs[0].id;
+    } else {
+      console.log("Output not found");
+    }
+  } catch (error) {
+    console.log(error);
+  }
+}
 
 async function updateLabPracticeSessionCommand(uuid, status, executionDate) {
   try {
@@ -103,47 +126,35 @@ async function updateLabPracticeSessionCommand(uuid, status, executionDate) {
   }
 }
 
-async function updateLabPracticeSessionOutput(uuid, value, captureDate) {
+async function createLabPracticeSessionOutput(sessionId, outputId, value, captureDate) {
+  //Update labPracticeSessionOutput
   try {
-    //Query labPracticeSessionOutput to get version information (See AppSync version control)
-    const queryAns = await client.query({
-      query: QUERY_OUTPUT,
-      variables: { id: uuid },
+    const mutationAns = await client.mutate({
+      mutation: CREATE_SESSIONOUTPUT,
+      variables: {
+        labpracticesessionID: sessionId,
+        labpracticeoutputID: outputId,
+        value: value,
+        captureDate: captureDate,
+      },
     });
-
-    const outputData = queryAns.data.getLabPracticeSessionOutput;
-    console.log(outputData);
-
-    //Update labPracticeSessionOutput
-    try {
-      const mutationAns = await client.mutate({
-        mutation: UPDATE_OUTPUT,
-        variables: {
-          id: uuid,
-          value: value,
-          version: outputData._version,
-          captureDate: captureDate
-        },
-      });
-      console.log(mutationAns.data.updateLabPracticeSessionOutput);
-    } catch (error) {
-      console.log(error);
-    }
+    console.log(mutationAns.data.createLabPracticeSessionOutput);
   } catch (error) {
     console.log(error);
   }
 }
 
 exports.handler = async (event) => {
-  console.log(event)
+  console.log(event);
   switch (event.type) {
     case "output":
-      console.log("Output: " + event.uuid)
-      await updateLabPracticeSessionOutput(event.uuid, event.value, event.captureDate);
+      event.data.forEach(async (item) => {
+        let outputId = await listLabPracticeOutputs({ name: { eq: item.name } });
+        createLabPracticeSessionOutput(event.sessionId, outputId, item.value, event.captureDate);
+      });
       break;
     case "command":
-      console.log("Command: " + event.uuid)
-      await updateLabPracticeSessionCommand(event.uuid, event.status, event.executionDate);
+      updateLabPracticeSessionCommand(event.uuid, event.status, event.executionDate);
       break;
   }
 };
@@ -152,10 +163,17 @@ exports.handler = async (event) => {
 
 // async function main() {
 //   let event = {
+//     sessionId: "aaaaaaa",
 //     type: "output",
-//     uuid: "c78ac980-186d-4b89-9347-b77f3f771346",
-//     value: "Heyyoo",
-//     captureDate: "2021-11-09T17:45:00-05:00",
+//     data: [
+//       { name: "Plot_V_Fase1", value: { x: [1, 2, 3, 4], y: [11, 12, 13, 11], xAxisUnits: "ms", yAxisUnits: "A" }, status: "ok" },
+//       { name: "V_Fase2", value: "120VAC", status: "ok" },
+//       { name: "V_Fase3", value: "121VAC", status: "ok" },
+//       { name: "I_Fase1", value: "0.87A", status: "ok" },
+//       { name: "I_Fase2", value: "0.4A", status: "ok" },
+//       { name: "I_Fase3", value: "No se puede abrir el puerto COM4", status: "error" },
+//     ],
+//     captureDate: "2021-11-09T16:40:00-05:00",
 //   };
 //   // let event = {
 //   //   type: "command",
@@ -163,9 +181,13 @@ exports.handler = async (event) => {
 //   //   status: "Hi",
 //   //   executionDate: "2021-11-09T16:40:00-05:00",
 //   // };
+
 //   switch (event.type) {
 //     case "output":
-//       updateLabPracticeSessionOutput(event.uuid, event.value, event.captureDate);
+//       event.data.forEach(async (item) => {
+//         let outputId = await listLabPracticeOutputs({ name: { eq: item.name } });
+//         createLabPracticeSessionOutput(event.sessionId, outputId, item.value, event.captureDate);
+//       });
 //       break;
 //     case "command":
 //       updateLabPracticeSessionCommand(event.uuid, event.status, event.executionDate);

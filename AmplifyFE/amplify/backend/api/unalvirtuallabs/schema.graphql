@@ -1,0 +1,219 @@
+type Organization @model @auth(rules: [{allow: public}]) {
+  id: ID!
+  country: String
+  region: String
+  city: String
+  type: String
+  name: String
+  description: String
+  phone: String
+  address: String
+  createdBy: String
+  updatedBy: String
+  Laboratories: [Laboratory] @connection(keyName: "byOrganization", fields: ["id"])
+}
+
+type Role @model @auth(rules: [{allow: public}]) {
+  id: ID!
+  name: String
+  description: String
+  createdBy: String
+  updatedBy: String
+  UserLabPracticeSessions: [UserLabPracticeSession] @connection(keyName: "byRole", fields: ["id"])
+  Privileges: [PrivilegeRole] @connection(keyName: "byRole", fields: ["id"])
+  Users: [RoleUser] @connection(keyName: "byRole", fields: ["id"])
+}
+
+type Privilege @model @auth(rules: [{allow: public}]) {
+  id: ID!
+  name: String
+  description: String
+  Roles: [PrivilegeRole] @connection(keyName: "byPrivilege", fields: ["id"])
+}
+
+type UserLabPracticeSession @model @key(name: "byUser", fields: ["userID"]) @key(name: "byLabPracticeSession", fields: ["labpracticesessionID"]) @auth(rules: [{allow: public}]) @key(name: "byRole", fields: ["roleID"]) {
+  id: ID!
+  sessionStartDate: AWSDateTime
+  sessionEndDate: AWSDateTime
+  User: User @connection
+  LabPracticeSession: LabPracticeSession @connection
+  userID: ID
+  labpracticesessionID: ID
+  roleID: ID
+}
+
+type User @model @auth(rules: [{allow: public}]) {
+  id: ID!
+  name: String
+  lastNames: String
+  documentIdNumber: String
+  email: String
+  phone: String
+  userName: String
+  s3AvatarPath: String
+  dateOfBirth: String
+  updatedBy: String
+  createdBy: String
+  UserLabPracticeSessions: [UserLabPracticeSession] @connection(keyName: "byUser", fields: ["id"])
+  Roles: [RoleUser] @connection(keyName: "byUser", fields: ["id"])
+  UserLabSemesters: [UserLabSemester] @connection(keyName: "byUser", fields: ["id"])
+}
+
+type LabPracticeSessionCommand @model @key(name: "byLabPracticeSession", fields: ["labpracticesessionID"]) @auth(rules: [{allow: public}]) {
+  id: ID!
+  requestDate: AWSDateTime
+  executionDate: AWSDateTime
+  status: String
+  parameters: AWSJSON
+  LabPracticeSession: LabPracticeSession @connection
+  LabPracticeCommand: LabPracticeCommand @connection
+  labpracticesessionID: ID
+}
+
+type LabPracticeSessionOutput @model @auth(rules: [{allow: public}]) @key(name: "byLabPracticeOutput", fields: ["labpracticeoutputID"]) @key(name: "byLabPracticeSession", fields: ["labpracticesessionID"]) {
+  id: ID!
+  captureDate: AWSDateTime
+  storageDate: String
+  value: String
+  LabPracticeOutput: LabPracticeOutput @connection
+  LabPracticeSession: LabPracticeSessionCommand @connection
+  labpracticeoutputID: ID
+  labpracticesessionID: ID
+}
+
+type LabPracticeOutput @model @auth(rules: [{allow: public}]) @key(name: "byLabPractice", fields: ["labpracticeID"]) {
+  id: ID!
+  name: String
+  descriptio: String
+  units: AWSJSON
+  updatedBy: String
+  createdBy: String
+  LabPractice: LabPracticeSessionOutput @connection
+  labpracticeID: ID
+  outputType: String
+  LabPracticeSessionOutputs: [LabPracticeSessionOutput] @connection(keyName: "byLabPracticeOutput", fields: ["id"])
+}
+
+type LabPracticeSession @model @key(name: "byLabPractice", fields: ["labpracticeID"]) @auth(rules: [{allow: public}]) {
+  id: ID!
+  startDate: AWSDateTime
+  endDate: AWSDateTime
+  description: String
+  updatedBy: String
+  createdBy: String
+  LabPractice: LabPracticeOutput @connection
+  labpracticeID: ID
+  LabPracticeSessionOutputs: [LabPracticeSessionOutput] @connection(keyName: "byLabPracticeSession", fields: ["id"])
+  LabPracticeSessionCommands: [LabPracticeSessionCommand] @connection(keyName: "byLabPracticeSession", fields: ["id"])
+  UserLabPracticeSessions: [UserLabPracticeSession] @connection(keyName: "byLabPracticeSession", fields: ["id"])
+}
+
+type LabPracticeDevice @model @auth(rules: [{allow: public}]) {
+  id: ID!
+  name: String
+  description: String
+  type: String
+  updatedBy: String
+  createdBy: String
+  LabPractice: LabPracticeOutput @connection
+}
+
+type LabPracticeParameter @model @auth(rules: [{allow: public}]) @key(name: "byLabPracticeCommand", fields: ["labpracticecommandID"]) @key(name: "byLabPractice", fields: ["labpracticeID"]) {
+  id: ID!
+  name: String
+  description: String
+  defaultValue: String
+  minValue: Int
+  maxValue: Int
+  regex: String
+  updatedBy: String
+  createdBy: String
+  LabPracticeCommand: LabPracticeCommand @connection
+  labpracticecommandID: ID
+  LabPractice: LabPracticeDevice @connection
+  labpracticeID: ID
+}
+
+type LabPracticeCommand @model @auth(rules: [{allow: public}]) @key(name: "byLabPractice", fields: ["labpracticeID"]) {
+  id: ID!
+  name: String
+  description: String
+  updatedBy: String
+  createdBy: String
+  LabPractice: LabPracticeParameter @connection
+  labpracticeID: ID
+  LabPracticeParameters: [LabPracticeParameter] @connection(keyName: "byLabPracticeCommand", fields: ["id"])
+}
+
+type LabPractice @model @auth(rules: [{allow: public}]) @key(name: "byLaboratory", fields: ["laboratoryID"]) {
+  id: ID!
+  name: String
+  description: String
+  duration: Int
+  updatedBy: String
+  createdBy: String
+  Laboratory: Laboratory @connection
+  laboratoryID: ID
+  LabPracticeCommands: [LabPracticeCommand] @connection(keyName: "byLabPractice", fields: ["id"])
+  LabPracticeParameters: [LabPracticeParameter] @connection(keyName: "byLabPractice", fields: ["id"])
+  LabPracticeDevice: LabPracticeDevice @connection
+  LabPracticeSessions: [LabPracticeSession] @connection(keyName: "byLabPractice", fields: ["id"])
+  LabPracticeOutputs: [LabPracticeOutput] @connection(keyName: "byLabPractice", fields: ["id"])
+}
+
+type LabSemester @model @key(name: "byLaboratory", fields: ["laboratoryID"]) @auth(rules: [{allow: public}]) {
+  id: ID!
+  semesterName: String
+  description: String
+  emailUserList: AWSJSON
+  updatedBy: String
+  createdBy: String
+  Laboratory: Laboratory @connection
+  laboratoryID: ID
+  users: [UserLabSemester] @connection(keyName: "byLabSemester", fields: ["id"])
+}
+
+type Laboratory @model @auth(rules: [{allow: public}]) @key(name: "byOrganization", fields: ["organizatioID"]) {
+  id: ID!
+  name: String
+  description: String
+  updatedBy: String
+  createdBy: String
+  LabSemesters: [LabSemester] @connection(keyName: "byLaboratory", fields: ["id"])
+  organizatioID: ID
+  Organization: Organization @connection
+}
+
+type PrivilegeRole @model(queries: null) @key(name: "byPrivilege", fields: ["privilegeID", "roleID"]) @key(name: "byRole", fields: ["roleID", "privilegeID"]) @auth(rules: [{allow: public}, {allow: public}]) {
+  id: ID!
+  privilegeID: ID!
+  roleID: ID!
+  privilege: Privilege! @connection(fields: ["privilegeID"])
+  role: Role! @connection(fields: ["roleID"])
+}
+
+type RoleUser @model(queries: null) @key(name: "byUser", fields: ["userID", "roleID"]) @key(name: "byRole", fields: ["roleID", "userID"]) @auth(rules: [{allow: public}, {allow: public}]) {
+  id: ID!
+  userID: ID!
+  roleID: ID!
+  user: User! @connection(fields: ["userID"])
+  role: Role! @connection(fields: ["roleID"])
+}
+
+type UserLabSemester @model(queries: null) @key(name: "byUser", fields: ["userID", "labsemesterID"]) @key(name: "byLabSemester", fields: ["labsemesterID", "userID"]) @auth(rules: [{allow: public}, {allow: public}]) {
+  id: ID!
+  userID: ID!
+  labsemesterID: ID!
+  user: User! @connection(fields: ["userID"])
+  labsemester: LabSemester! @connection(fields: ["labsemesterID"])
+}
+ 
+input LambdaInput {
+  message: String!
+  topic: String!
+}
+
+type Mutation {
+  publishMqttMessage(input: LambdaInput!): String @function(name: "iotpub-${env}")
+}
+ 
