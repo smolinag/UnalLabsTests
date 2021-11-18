@@ -1,5 +1,7 @@
 const { createAuthLink } = require("aws-appsync-auth-link");
-const { createSubscriptionHandshakeLink } = require("aws-appsync-subscription-link");
+const {
+  createSubscriptionHandshakeLink,
+} = require("aws-appsync-subscription-link");
 
 const fetch = require("node-fetch");
 const { ApolloLink } = require("apollo-link");
@@ -23,7 +25,10 @@ const auth = {
 
 const httpLink = createHttpLink({ uri: url, fetch: fetch });
 
-const link = ApolloLink.from([createAuthLink({ url, region, auth }), createSubscriptionHandshakeLink({ url, region, auth }, httpLink)]);
+const link = ApolloLink.from([
+  createAuthLink({ url, region, auth }),
+  createSubscriptionHandshakeLink({ url, region, auth }, httpLink),
+]);
 
 const client = new ApolloClient({
   link,
@@ -43,14 +48,26 @@ const LIST_OUTPUTS = gql`
 `;
 
 const CREATE_SESSIONOUTPUT = gql`
-  mutation createLabPracticeSessionOutput($labpracticesessionID: ID!, $labpracticeoutputID: ID!, $value: String!, $captureDate: AWSDateTime!) {
+  mutation createLabPracticeSessionOutput(
+    $labpracticesessionID: ID!
+    $labpracticeoutputID: ID!
+    $value: String!
+    $captureDate: AWSDateTime!
+  ) {
     createLabPracticeSessionOutput(
-      input: { labpracticesessionID: $labpracticesessionID, labpracticeoutputID: $labpracticeoutputID, value: $value, captureDate: $captureDate }
+      input: {
+        labpracticesessionID: $labpracticesessionID
+        labpracticeoutputID: $labpracticeoutputID
+        value: $value
+        captureDate: $captureDate
+      }
     ) {
       id
+      labpracticeoutputID
+      labpracticesessionID
       value
-      _version
-      captureDate
+      updatedAt
+      createdAt
     }
   }
 `;
@@ -65,8 +82,20 @@ const QUERY_COMMAND = gql`
 `;
 
 const UPDATE_COMMAND = gql`
-  mutation updateLabPracticeSessionCommand($id: ID!, $status: String!, $version: Int!, $executionDate: AWSDateTime!) {
-    updateLabPracticeSessionCommand(input: { id: $id, status: $status, _version: $version, executionDate: $executionDate }) {
+  mutation updateLabPracticeSessionCommand(
+    $id: ID!
+    $status: String!
+    $version: Int!
+    $executionDate: AWSDateTime!
+  ) {
+    updateLabPracticeSessionCommand(
+      input: {
+        id: $id
+        status: $status
+        _version: $version
+        executionDate: $executionDate
+      }
+    ) {
       id
       status
       _version
@@ -126,7 +155,12 @@ async function updateLabPracticeSessionCommand(uuid, status, executionDate) {
   }
 }
 
-async function createLabPracticeSessionOutput(sessionId, outputId, value, captureDate) {
+async function createLabPracticeSessionOutput(
+  sessionId,
+  outputId,
+  value,
+  captureDate
+) {
   //Update labPracticeSessionOutput
   try {
     const mutationAns = await client.mutate({
@@ -149,12 +183,23 @@ exports.handler = async (event) => {
   switch (event.type) {
     case "output":
       event.data.forEach(async (item) => {
-        let outputId = await listLabPracticeOutputs({ name: { eq: item.name } });
-        createLabPracticeSessionOutput(event.sessionId, outputId, item.value, event.captureDate);
+        let outputId = await listLabPracticeOutputs({
+          name: { eq: item.name },
+        });
+        createLabPracticeSessionOutput(
+          event.sessionId,
+          outputId,
+          item.value,
+          event.captureDate
+        );
       });
       break;
     case "command":
-      updateLabPracticeSessionCommand(event.uuid, event.status, event.executionDate);
+      updateLabPracticeSessionCommand(
+        event.uuid,
+        event.status,
+        event.executionDate
+      );
       break;
   }
 };
