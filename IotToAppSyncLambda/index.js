@@ -49,8 +49,11 @@ const CREATE_SESSIONOUTPUT = gql`
     ) {
       id
       value
+      labpracticeoutputID
+      labpracticesessionID
+      captureDate      
+      storageDate
       _version
-      captureDate
     }
   }
 `;
