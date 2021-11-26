@@ -148,13 +148,18 @@ exports.handler = async (event) => {
   console.log(event);
   switch (event.type) {
     case "output":
-      event.data.forEach(async (item) => {
+      for (let i = 0; i < event.data.length; i++) {
+        let item = event.data[i];
+        console.log(item);
         let outputId = await listLabPracticeOutputs({ name: { eq: item.name } });
-        createLabPracticeSessionOutput(event.sessionId, outputId, item.value, event.captureDate);
-      });
+        await createLabPracticeSessionOutput(event.sessionId, outputId, item.value, event.captureDate);
+      }
       break;
     case "command":
-      updateLabPracticeSessionCommand(event.uuid, event.status, event.executionDate);
+      await updateLabPracticeSessionCommand(event.uuid, event.status, event.executionDate);
+      break;
+    default:
+      console.log("Event type not valid: " + event.type);
       break;
   }
 };
@@ -162,25 +167,25 @@ exports.handler = async (event) => {
 // main();
 
 // async function main() {
-//   let event = {
-//     sessionId: "aaaaaaa",
-//     type: "output",
-//     data: [
-//       { name: "Plot_V_Fase1", value: { x: [1, 2, 3, 4], y: [11, 12, 13, 11], xAxisUnits: "ms", yAxisUnits: "A" }, status: "ok" },
-//       { name: "V_Fase2", value: "120VAC", status: "ok" },
-//       { name: "V_Fase3", value: "121VAC", status: "ok" },
-//       { name: "I_Fase1", value: "0.87A", status: "ok" },
-//       { name: "I_Fase2", value: "0.4A", status: "ok" },
-//       { name: "I_Fase3", value: "No se puede abrir el puerto COM4", status: "error" },
-//     ],
-//     captureDate: "2021-11-09T16:40:00-05:00",
-//   };
 //   // let event = {
-//   //   type: "command",
-//   //   uuid: "49b9fd50-ad16-4738-9132-f96cac186cc3",
-//   //   status: "Hi",
-//   //   executionDate: "2021-11-09T16:40:00-05:00",
+//   //   sessionId: "aaaaaaa",
+//   //   type: "output",
+//   //   data: [
+//   //     { name: "Plot_V_Fase1", value: { x: [1, 2, 3, 4], y: [11, 12, 13, 11], xAxisUnits: "ms", yAxisUnits: "A" }, status: "ok" },
+//   //     { name: "V_Fase2", value: "120VAC", status: "ok" },
+//   //     { name: "V_Fase3", value: "121VAC", status: "ok" },
+//   //     { name: "I_Fase1", value: "0.87A", status: "ok" },
+//   //     { name: "I_Fase2", value: "0.4A", status: "ok" },
+//   //     { name: "I_Fase3", value: "No se puede abrir el puerto COM4", status: "error" },
+//   //   ],
+//   //   captureDate: "2021-11-09T16:40:00-05:00",
 //   // };
+//   let event = {
+//     type: "command",
+//     uuid: "79fa13d2-1f0f-41d6-b465-6031de748aa7",
+//     status: "Hi",
+//     executionDate: "2021-11-25T16:39:06.008553-05:00",
+//   };
 
 //   switch (event.type) {
 //     case "output":
@@ -191,6 +196,9 @@ exports.handler = async (event) => {
 //       break;
 //     case "command":
 //       updateLabPracticeSessionCommand(event.uuid, event.status, event.executionDate);
+//       break;
+//     default:
+//       console.log("Event type not valid: " + event.type);
 //       break;
 //   }
 // }
