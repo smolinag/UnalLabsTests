@@ -68,9 +68,15 @@ const UPDATE_COMMAND = gql`
   mutation updateLabPracticeSessionCommand($id: ID!, $status: String!, $version: Int!, $executionDate: AWSDateTime!) {
     updateLabPracticeSessionCommand(input: { id: $id, status: $status, _version: $version, executionDate: $executionDate }) {
       id
+      labpracticecommandID
+      labpracticesessionID
+      parameters
       status
-      _version
+      requestDate
+      updatedAt
       executionDate
+      createdAt
+      _version
     }
   }
 `;
